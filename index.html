@@ -395,6 +395,7 @@
       <button onclick="showPage('links', this)">Links</button>
     </nav>
     <button id="admin-btn" onclick="handleAdminBtn()">⚙ Admin</button>
+    <button id="logout-btn" onclick="logout()" style="display:none;background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:0.7rem;padding:0.4rem 0.8rem;cursor:pointer;text-transform:uppercase;letter-spacing:0.1em;transition:all 0.15s;border-radius:2px;">Logout</button>
   </div>
 </header>
 
@@ -433,7 +434,14 @@
       <h3>🎯 Players</h3>
       <div class="inline-form">
         <input type="text" id="new-player-name" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()">
+        <input type="text" id="new-player-grade" placeholder="Grade" style="max-width:80px;" onkeydown="if(event.key==='Enter')addPlayer()">
         <button class="btn btn-primary" onclick="addPlayer()">Add</button>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.5rem;">Bulk Import</div>
+        <textarea id="bulk-import-input" placeholder="Paste names here, one per line or comma separated..." style="min-height:80px;margin-bottom:0.5rem;"></textarea>
+        <button class="btn btn-primary" onclick="bulkImport()">Import All</button>
+        <div id="bulk-msg"></div>
       </div>
       <div id="players-list"></div>
     </div>
@@ -572,6 +580,7 @@
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiX8Vb2-KktXcJSuMJ0kY6Da3S-1ScP80q4oCEeo81mQAWhmme9eco_1iDvjXaQo68/exec';
 
 let state = load();
 let isAdmin = false;
@@ -677,6 +686,15 @@ function handleAdminBtn() {
   }
 }
 
+function logout() {
+  isAdmin = false;
+  document.getElementById('admin-btn').textContent = '⚙ Admin';
+  document.getElementById('admin-btn').classList.remove('logged-in');
+  document.getElementById('logout-btn').style.display = 'none';
+  showPage('leaderboard', document.querySelector('nav button'));
+}
+
+
 function tryLogin() {
   const pw = document.getElementById('admin-password').value;
   if (pw === ADMIN_PASSWORD) {
@@ -684,6 +702,7 @@ function tryLogin() {
     closeModal('login-modal');
     document.getElementById('admin-btn').textContent = '⚙ Admin ●';
     document.getElementById('admin-btn').classList.add('logged-in');
+    document.getElementById('logout-btn').style.display = 'inline-block';
     showPage('admin', null);
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     renderAdmin();
@@ -720,6 +739,7 @@ function renderLeaderboard() {
     <tr>
       <td class="rank ${i < 3 ? 'top' : ''}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i+1)}</td>
       <td>${p.name}</td>
+      <td style="color:var(--muted);font-size:0.8rem;">${p.grade || '—'}</td>
       <td class="blammo-count">${p.blammos}</td>
       <td><span class="${p.alive ? 'status-alive' : 'status-eliminated'}">${p.alive ? 'Alive' : 'Eliminated'}</span></td>
     </tr>
@@ -727,7 +747,7 @@ function renderLeaderboard() {
 
   el.innerHTML = `
     <table>
-      <thead><tr><th>Rank</th><th>Player</th><th>Blammos</th><th>Status</th></tr></thead>
+      <thead><tr><th>Rank</th><th>Player</th><th>Grade</th><th>Blammos</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;
@@ -907,17 +927,53 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 
 function addPlayer() {
   const input = document.getElementById('new-player-name');
+  const gradeInput = document.getElementById('new-player-grade');
   const name = input.value.trim();
+  const grade = gradeInput.value.trim();
   if (!name) return;
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     alert('A player with that name already exists.');
     return;
   }
-  state.players.push({ id: uid(), name, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
+  state.players.push({ id: uid(), name, grade, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
   input.value = '';
+  gradeInput.value = '';
   save();
   renderAdmin();
 }
+
+function bulkImport() {
+  const raw = document.getElementById('bulk-import-input').value;
+  const msgEl = document.getElementById('bulk-msg');
+  if (!raw.trim()) return;
+
+  const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
+  let added = 0, skipped = 0;
+
+  lines.forEach(line => {
+    // Format: email \t \t name \t grade
+    const parts = line.split(/\t/).map(p => p.trim()).filter((p, i) => i === 0 || p.length > 0);
+    // parts[0] = email, parts[1] = name, parts[2] = grade
+    const email = parts[0] || '';
+    const name = parts[1] || '';
+    const grade = parts[2] || '';
+    if (!name) return;
+    if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+      skipped++;
+    } else {
+      state.players.push({ id: uid(), name, grade, email, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
+      added++;
+    }
+  });
+
+  document.getElementById('bulk-import-input').value = '';
+  save();
+  renderAdmin();
+  msgEl.className = added > 0 ? 'success' : 'error';
+  msgEl.textContent = `✓ Added ${added} player(s)${skipped > 0 ? `, skipped ${skipped} duplicate(s)` : ''}.`;
+  setTimeout(() => { msgEl.textContent = ''; }, 4000);
+}
+
 
 function removePlayer(id) {
   showConfirm('Remove Player', 'This will permanently remove the player and their target assignments.', () => {
@@ -966,6 +1022,10 @@ function recordBlammo() {
       msgEl.className = 'success';
       msgEl.textContent = `💥 Blammo recorded! ${attacker.name} now has ${attacker.blammos} blammo(s).`;
       setTimeout(() => { msgEl.textContent = ''; }, 4000);
+
+      // Send emails
+      const newTarget = state.players.find(p => p.id === inheritedTarget);
+      sendBlammoEmails(attacker, victim, newTarget);
     }
   );
 }
@@ -1070,6 +1130,29 @@ function submitClear() {
   renderAdmin();
   renderLeaderboard();
   alert('Storage cleared. Default state restored, including the pre-set links.');
+}
+
+
+async function sendBlammoEmails(attacker, victim, newTarget) {
+  if (!APPS_SCRIPT_URL) return; // Not configured yet
+
+  const payload = {
+    week: state.week,
+    attacker: { name: attacker.name, email: attacker.email || '' },
+    victim:   { name: victim.name,   email: victim.email   || '' },
+    newTarget: newTarget ? { name: newTarget.name } : null
+  };
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.error('Email send failed:', e);
+  }
 }
 
 
