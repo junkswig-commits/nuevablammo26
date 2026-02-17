@@ -503,6 +503,7 @@
       <h3>⚠ Week Management</h3>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Advancing the week reshuffles targets randomly among alive players and resets weekly kill counts. Per the rules, every 2 weeks players need 1 more total elimination — or they're out. Quota check: need <strong style="color:var(--yellow)" id="current-quota">—</strong> blammo(s) by end of week <strong style="color:var(--yellow)" id="next-even-week">—</strong>.</p>
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="assignInitialTargets()">🎯 Assign Initial Targets</button>
         <button class="btn btn-danger" onclick="advanceWeek()">Advance to Next Week</button>
         <button class="btn btn-danger" onclick="fullReset()">Full Reset (New Game)</button>
         <button class="btn btn-danger" onclick="clearStorage()">⚠ Clear All Storage</button>
@@ -1054,6 +1055,25 @@ function removeLink(i) {
   save();
   renderLinksEditor();
 }
+
+function assignInitialTargets() {
+  const alive = state.players.filter(p => p.alive);
+  if (alive.length < 2) {
+    alert('You need at least 2 players to assign targets.');
+    return;
+  }
+  const alreadyAssigned = alive.filter(p => p.target).length;
+  const msg = alreadyAssigned > 0
+    ? `${alreadyAssigned} player(s) already have targets. This will reassign everyone randomly. Continue?`
+    : `Assign random targets to all ${alive.length} players and start Week 1?`;
+  showConfirm('🎯 Assign Initial Targets', msg, () => {
+    assignTargets();
+    save();
+    renderAdmin();
+    alert(`Done! All ${alive.length} players have been assigned a target. Game on!`);
+  });
+}
+
 
 function advanceWeek() {
   const nextWeek = state.week + 1;
