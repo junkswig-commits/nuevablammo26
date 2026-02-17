@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLAMMO</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --green: #39ff14;
+    --green-dim: #1a7a05;
+    --red: #ff3939;
+    --yellow: #ffd700;
+    --text: #e8e8e8;
+    --muted: #666;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    text-shadow: 0 0 20px var(--green-dim), 0 0 40px rgba(57,255,20,0.2);
+    animation: flicker 8s infinite;
+  }
+
+  @keyframes flicker {
+    0%,94%,96%,100% { opacity: 1; }
+    95% { opacity: 0.7; }
+  }
+
+  .header-right { display: flex; gap: 1rem; align-items: center; }
+
+  nav { display: flex; gap: 0.25rem; }
+
+  nav button {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  nav button:hover, nav button.active {
+    color: var(--green);
+    border-color: var(--green-dim);
+    background: rgba(57,255,20,0.05);
+  }
+
+  #admin-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  #admin-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+  #admin-btn.logged-in { border-color: var(--green-dim); color: var(--green); }
+
+  /* PAGES */
+  .page { display: none; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.08em;
+    color: var(--green);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  /* LEADERBOARD */
+  .week-badge {
+    display: inline-block;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr { border-bottom: 1px solid var(--green-dim); }
+
+  th {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 400;
+  }
+
+  td { padding: 0.7rem 0.75rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface); }
+
+  .rank { color: var(--muted); font-size: 0.75rem; }
+  .rank.top { color: var(--yellow); }
+
+  .status-alive {
+    color: var(--green);
+    font-size: 0.7rem;
+    border: 1px solid var(--green-dim);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    background: rgba(57,255,20,0.05);
+  }
+
+  .status-eliminated {
+    color: var(--red);
+    font-size: 0.7rem;
+    border: 1px solid rgba(255,57,57,0.3);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    background: rgba(255,57,57,0.05);
+    text-decoration: line-through;
+  }
+
+  .blammo-count { color: var(--yellow); font-weight: 500; }
+
+  /* RULES */
+  .rules-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.8;
+    font-size: 0.875rem;
+    color: #ccc;
+    white-space: pre-wrap;
+  }
+
+  /* LINKS */
+  .links-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .link-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  .link-card:hover { border-color: var(--green-dim); background: var(--surface2); }
+  .link-card .link-icon { color: var(--green); font-size: 1.1rem; }
+  .link-card .link-label { font-size: 0.875rem; }
+  .link-card .link-url { font-size: 0.7rem; color: var(--muted); }
+
+  /* MODAL / ADMIN PANEL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--green);
+    width: 100%;
+    max-width: 480px;
+    padding: 2rem;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group { margin-bottom: 1rem; }
+
+  label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+    outline: none;
+    transition: border-color 0.15s;
+    border-radius: 2px;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--green-dim); }
+
+  textarea { resize: vertical; min-height: 120px; }
+
+  select option { background: var(--surface); }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: #000;
+    border: none;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover { background: #2dcc10; box-shadow: 0 0 12px rgba(57,255,20,0.3); }
+
+  .btn-danger {
+    background: none;
+    color: var(--red);
+    border: 1px solid rgba(255,57,57,0.4);
+  }
+
+  .btn-danger:hover { background: rgba(255,57,57,0.1); }
+
+  .btn-ghost {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: #444; }
+
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+  /* ADMIN PANEL */
+  #admin-panel { display: none; }
+  #admin-panel.visible { display: block; }
+
+  .admin-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-section h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--yellow);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    gap: 1rem;
+  }
+
+  .player-row:last-child { border-bottom: none; }
+
+  .player-info { flex: 1; }
+  .player-name-display { font-weight: 500; }
+  .player-target { font-size: 0.7rem; color: var(--green); margin-top: 0.1rem; }
+
+  .inline-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+  .inline-form input { flex: 1; }
+
+  .error { color: var(--red); font-size: 0.75rem; margin-top: 0.5rem; }
+  .success { color: var(--green); font-size: 0.75rem; margin-top: 0.5rem; }
+
+  .targets-table td { font-size: 0.8rem; }
+  .target-arrow { color: var(--green); margin: 0 0.5rem; }
+
+  .danger-zone {
+    border-color: rgba(255,57,57,0.3);
+    border-left: 3px solid var(--red);
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    header { padding: 0 1rem; }
+    .logo { font-size: 1.8rem; }
+    .page { padding: 1.25rem; }
+    nav button { font-size: 0.65rem; padding: 0.35rem 0.6rem; }
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 3rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .tag { font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 2px; margin-left: 0.4rem; }
+  .tag-admin { background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid rgba(255,215,0,0.3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BLAMMO</div>
+  <div class="header-right">
+    <nav>
+      <button class="active" onclick="showPage('leaderboard', this)">Leaderboard</button>
+      <button onclick="showPage('rules', this)">Rules</button>
+      <button onclick="showPage('links', this)">Links</button>
+    </nav>
+    <button id="admin-btn" onclick="handleAdminBtn()">⚙ Admin</button>
+  </div>
+</header>
+
+<!-- PAGES -->
+<div id="page-leaderboard" class="page active">
+  <div style="display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;">
+    <h2>Leaderboard</h2>
+    <span id="week-badge" class="week-badge">Week 1</span>
+  </div>
+  <div id="leaderboard-content"></div>
+</div>
+
+<div id="page-rules" class="page">
+  <h2>Rules</h2>
+  <div id="rules-content" class="rules-block"></div>
+</div>
+
+<div id="page-links" class="page">
+  <h2>Important Links</h2>
+  <div id="links-content" class="links-list"></div>
+</div>
+
+<div id="page-admin" class="page">
+  <h2>Admin Panel <span class="tag tag-admin">Restricted</span></h2>
+  <div id="admin-panel" class="visible">
+
+    <!-- AT RISK -->
+    <div class="admin-section" id="at-risk-section" style="border-left:3px solid var(--red);display:none;">
+      <h3>⚠ At-Risk Players</h3>
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem;">These players don't meet the current elimination quota and may be eliminated by admins.</p>
+      <div id="at-risk-list"></div>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="admin-section">
+      <h3>🎯 Players</h3>
+      <div class="inline-form">
+        <input type="text" id="new-player-name" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn btn-primary" onclick="addPlayer()">Add</button>
+      </div>
+      <div id="players-list"></div>
+    </div>
+
+    <!-- RECORD BLAMMO -->
+    <div class="admin-section">
+      <h3>💥 Record a Blammo</h3>
+      <div class="form-group">
+        <label>Who got blammo'd?</label>
+        <select id="blammo-victim"></select>
+      </div>
+      <div id="blammo-preview" style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;min-height:1.2rem;"></div>
+      <button class="btn btn-primary" onclick="recordBlammo()">Record Blammo</button>
+      <div id="blammo-msg"></div>
+    </div>
+
+    <!-- TARGETS VIEW -->
+    <div class="admin-section">
+      <h3>👁 Current Target Chain</h3>
+      <div id="targets-view"></div>
+    </div>
+
+    <!-- RULES EDITOR -->
+    <div class="admin-section">
+      <h3>📋 Edit Rules</h3>
+      <div class="form-group">
+        <textarea id="rules-editor"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveRules()">Save Rules</button>
+    </div>
+
+    <!-- LINKS EDITOR -->
+    <div class="admin-section">
+      <h3>🔗 Manage Links</h3>
+      <div id="links-editor-list"></div>
+      <div style="margin-top:1rem;background:var(--bg);border:1px solid var(--border);padding:1rem;">
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.75rem;">Add New Link</div>
+        <div class="form-group">
+          <label>Label</label>
+          <input type="text" id="new-link-label" placeholder="e.g. Sign-up Form">
+        </div>
+        <div class="form-group">
+          <label>URL</label>
+          <input type="url" id="new-link-url" placeholder="https://...">
+        </div>
+        <button class="btn btn-primary" onclick="addLink()">Add Link</button>
+      </div>
+    </div>
+
+    <!-- TEST MODE -->
+    <div class="admin-section" style="border-left:3px solid #888;">
+      <h3 style="color:var(--muted);">🧪 Test Mode</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Populate the game with fake players and blammo history to verify everything works correctly. This will overwrite current data.</p>
+      <button class="btn btn-ghost" onclick="loadTestData()">Load Test Data</button>
+    </div>
+
+    <!-- WEEK -->
+    <div class="admin-section danger-zone">
+      <h3>⚠ Week Management</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Advancing the week reshuffles targets randomly among alive players and resets weekly kill counts. Per the rules, every 2 weeks players need 1 more total elimination — or they're out. Quota check: need <strong style="color:var(--yellow)" id="current-quota">—</strong> blammo(s) by end of week <strong style="color:var(--yellow)" id="next-even-week">—</strong>.</p>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button class="btn btn-danger" onclick="advanceWeek()">Advance to Next Week</button>
+        <button class="btn btn-danger" onclick="fullReset()">Full Reset (New Game)</button>
+        <button class="btn btn-danger" onclick="clearStorage()">⚠ Clear All Storage</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal">
+    <h3>Admin Access</h3>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="admin-password" placeholder="Enter admin password..." onkeydown="if(event.key==='Enter')tryLogin()">
+    </div>
+    <div id="login-error" class="error" style="display:none;">Incorrect password.</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="tryLogin()">Login</button>
+      <button class="btn btn-ghost" onclick="closeModal('login-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <h3>⚠ Full Reset</h3>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.7;">This will erase all players and blammo records, and reset to Week 1. Rules and links will be kept. Enter the password to continue.</p>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="reset-password-input" placeholder="Enter password..." onkeydown="if(event.key==='Enter')submitReset()">
+    </div>
+    <div id="reset-error" class="error" style="display:none;">Incorrect password.</div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="submitReset()">Reset Game</button>
+      <button class="btn btn-ghost" onclick="closeModal('reset-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR STORAGE MODAL -->
+<div class="modal-overlay" id="clear-modal">
+  <div class="modal">
+    <h3>⚠ Clear All Storage</h3>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.7;">This will wipe EVERYTHING and restore defaults. Enter the clear storage password to continue.</p>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="clear-password-input" placeholder="Enter password..." onkeydown="if(event.key==='Enter')submitClear()">
+    </div>
+    <div id="clear-error" class="error" style="display:none;">Incorrect password.</div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="submitClear()">Clear Everything</button>
+      <button class="btn btn-ghost" onclick="closeModal('clear-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-msg" style="font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.7;"></p>
+    <div class="btn-row">
+      <button class="btn btn-danger" id="confirm-yes">Yes, do it</button>
+      <button class="btn btn-ghost" onclick="closeModal('confirm-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+const ADMIN_PASSWORD = 'DJChozenWan23';
+const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
+const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
+
+let state = load();
+let isAdmin = false;
+
+function defaultState() {
+  return {
+    week: 1,
+    players: [],   // { id, name, alive, blammos, target }
+    rules: `SECTION 1 — GAME PLAY
+
+Spoons must only be held with an active muscle, and must be at least 50% visible at any one angle. 50% of the whole spoon must be visible AND green.
+
+Only plastic lime green spoons distributed by organizers count as a valid "Blammo" spoon. Spoons must be whole, but taping fragments together is fine. If fragments are not connected via a mechanism (e.g. tape), you are not safe. All legal Blammo spoons must be at least 3 inches long.
+
+Spoons can be acquired by Blammo'ing your target (they must give you their spoon if you request it), or by receiving a new spoon from Jackee after completing a challenge.
+
+Every two weeks from the start of Blammo, you need at least one more elimination — otherwise you are out. After two weeks: 1 elimination required. After four weeks: 2 required. Etc. Rack up eliminations early!
+
+Targets rotate once per week.
+
+If you are holding your spoon, you are safe. You may only hold ONE Blammo spoon at a time. Holding more than one = not safe. If multiple people are holding the same spoon, none of them are safe.
+
+You cannot tape or attach the spoon to yourself in any way.
+
+To "Blammo" a target: tap them with your valid spoon while they are not holding their valid spoon, and say "Blammo!"
+
+When you Blammo a target, you inherit their target. Before reporting, you must get your target to agree they were Blammo'd, and have them tell you your new target. Then report via the official form.
+
+When you Blammo a target, you inherit their target. If unsure about your new target, consult an organizer.
+
+You may not forcibly take or hold someone else's spoon. You may conceal part of someone's spoon as long as at least 50% remains visible. You may take a spoon from someone else with their permission to protect yourself.
+
+Blammos are only valid outside of safe zones (see Section 2) — generally during lunch, passing periods, and before/after school.
+
+Impersonation of any student or teacher results in immediate disqualification. First offense of other rules = warning; second = disqualification (case-by-case basis).
+
+
+SECTION 2 — BLAMMO-FREE ZONES
+
+• Closed/locked bathroom stalls, locker rooms, and gender-neutral bathrooms are safe.
+• ALL scheduled class, club, assembly, affinity group, and advisory times are Blammo-free. Classrooms are Blammo-free from scheduled start time until scheduled end time OR when all instructional time is over, whichever is later.
+• Free periods are Blammo-free.
+• iLab metal shop and woodshop (rooms 114 & 115) are ALWAYS Blammo-free.
+• WoW workshops and trip meetings are Blammo-free (same rules as classes). Exception: if off-campus, you may Blammo during the bus/van ride there and back only.
+• Official sports practices, events, and games are Blammo-free. Bus/van rides to games are NOT Blammo-free.
+• You may not Blammo a student meeting with teachers/staff (tutorial). Informal hallway chats do not count. Official peer-tutor sessions are also Blammo-free.
+• You may not Blammo someone if touching them could be dangerous (e.g. during a lab).
+• If a Nueva teacher, staff, or faculty declares any activity or location Blammo-free, their word is law.
+• "Camping" with the intention of not getting Blammo'd is a rules violation.
+
+
+SECTION 3 — SPIRIT POINTS
+
+• Sign up to play: +50 spirit points for your grade
+• Each Blammo: +100 spirit points for your grade
+• First/fastest Blammo of the game: +1,000 spirit points for your grade
+• 1st place winner: +50,000 | 2nd place: +30,000 | 3rd place: +10,000
+  (Points stack if multiple winners are from the same grade)`,
+    links: [
+      { label: 'Report a Blammo', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfvyItBg1J9hnmoKezlfBXnWTPe8Jln-w2jITz3c0orHjD21w/viewform?usp=publish-editor' },
+      { label: 'Blammo Sign-ups', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeAQaPeld771rtY8yTAYNuS61dX_milkaYJCFqP3MQj3A_35w/viewform?usp=publish-editor' }
+    ]
+  };
+}
+
+function load() {
+  try {
+    const s = localStorage.getItem('blammo-state');
+    return s ? JSON.parse(s) : defaultState();
+  } catch { return defaultState(); }
+}
+
+function save() {
+  localStorage.setItem('blammo-state', JSON.stringify(state));
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  if (name === 'leaderboard') renderLeaderboard();
+  if (name === 'rules') renderRules();
+  if (name === 'links') renderLinks();
+  if (name === 'admin') renderAdmin();
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+
+function handleAdminBtn() {
+  if (isAdmin) {
+    showPage('admin', null);
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    renderAdmin();
+  } else {
+    document.getElementById('admin-password').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    openModal('login-modal');
+    setTimeout(() => document.getElementById('admin-password').focus(), 100);
+  }
+}
+
+function tryLogin() {
+  const pw = document.getElementById('admin-password').value;
+  if (pw === ADMIN_PASSWORD) {
+    isAdmin = true;
+    closeModal('login-modal');
+    document.getElementById('admin-btn').textContent = '⚙ Admin ●';
+    document.getElementById('admin-btn').classList.add('logged-in');
+    showPage('admin', null);
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    renderAdmin();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────────
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showConfirm(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-yes').onclick = () => { closeModal('confirm-modal'); cb(); };
+  openModal('confirm-modal');
+}
+
+// ─── LEADERBOARD ─────────────────────────────────────────────────────────────
+
+function renderLeaderboard() {
+  document.getElementById('week-badge').textContent = `Week ${state.week}`;
+  const el = document.getElementById('leaderboard-content');
+  const players = [...state.players].sort((a, b) => b.blammos - a.blammos);
+
+  if (!players.length) {
+    el.innerHTML = '<div class="empty-state">No players yet</div>';
+    return;
+  }
+
+  let rows = players.map((p, i) => `
+    <tr>
+      <td class="rank ${i < 3 ? 'top' : ''}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i+1)}</td>
+      <td>${p.name}</td>
+      <td class="blammo-count">${p.blammos}</td>
+      <td><span class="${p.alive ? 'status-alive' : 'status-eliminated'}">${p.alive ? 'Alive' : 'Eliminated'}</span></td>
+    </tr>
+  `).join('');
+
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Rank</th><th>Player</th><th>Blammos</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// ─── RULES ────────────────────────────────────────────────────────────────────
+
+function renderRules() {
+  document.getElementById('rules-content').textContent = state.rules;
+}
+
+// ─── LINKS ────────────────────────────────────────────────────────────────────
+
+function renderLinks() {
+  const el = document.getElementById('links-content');
+  if (!state.links.length) {
+    el.innerHTML = '<div class="empty-state">No links added yet</div>';
+    return;
+  }
+  el.innerHTML = state.links.map(l => `
+    <a class="link-card" href="${l.url}" target="_blank" rel="noopener">
+      <span class="link-icon">→</span>
+      <div>
+        <div class="link-label">${l.label}</div>
+        <div class="link-url">${l.url}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// ─── ADMIN RENDER ─────────────────────────────────────────────────────────────
+
+function renderAdmin() {
+  renderPlayersList();
+  renderAtRisk();
+  renderBlammoSelect();
+  renderTargetsView();
+  document.getElementById('rules-editor').value = state.rules;
+  renderLinksEditor();
+  // Update quota info
+  const nextEven = state.week % 2 === 0 ? state.week : state.week + 1;
+  const quotaAtNextEven = Math.floor(nextEven / 2);
+  document.getElementById('current-quota').textContent = quotaAtNextEven;
+  document.getElementById('next-even-week').textContent = nextEven;
+}
+
+function renderAtRisk() {
+  const section = document.getElementById('at-risk-section');
+  const list = document.getElementById('at-risk-list');
+  const required = getRequiredBlammos();
+  if (required === 0) { section.style.display = 'none'; return; }
+  const atRisk = state.players.filter(p => isAtRisk(p));
+  if (!atRisk.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = atRisk.map(p => `
+    <div class="player-row">
+      <div class="player-info">
+        <div class="player-name-display" style="color:var(--red)">${p.name}</div>
+        <div style="font-size:0.7rem;color:var(--muted);">Has ${p.blammos} blammo(s) — needs ${required} to stay in</div>
+      </div>
+      <button class="btn btn-danger" style="font-size:0.65rem;padding:0.3rem 0.6rem;" onclick="toggleAlive('${p.id}')">Eliminate</button>
+    </div>
+  `).join('');
+}
+
+function getRequiredBlammos() {
+  return Math.floor(state.week / 2);
+}
+
+function isAtRisk(p) {
+  if (!p.alive) return false;
+  return p.blammos < getRequiredBlammos();
+}
+
+function renderPlayersList() {
+  const el = document.getElementById('players-list');
+  if (!state.players.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:1rem 0;">No players added</div>';
+    return;
+  }
+  const required = getRequiredBlammos();
+  el.innerHTML = state.players.map(p => {
+    const risk = isAtRisk(p);
+    return `
+    <div class="player-row">
+      <div class="player-info">
+        <div class="player-name-display">
+          ${p.name}
+          ${!p.alive ? '<span style="color:var(--red);font-size:0.7rem;"> [ELIM]</span>' : ''}
+          ${risk ? '<span style="color:var(--red);font-size:0.65rem;border:1px solid rgba(255,57,57,0.5);padding:0.1rem 0.4rem;margin-left:0.4rem;">⚠ AT RISK</span>' : ''}
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem;">
+          Target: <span style="color:var(--green)">${getTargetName(p)}</span>
+          &nbsp;·&nbsp; Total blammos: <span style="color:var(--yellow)">${p.blammos}</span>
+          &nbsp;·&nbsp; This week: <span style="color:${(p.weeklyBlammos||0) > 0 ? 'var(--green)' : 'var(--muted)'}">${p.weeklyBlammos || 0}</span>
+          ${required > 0 && p.alive ? `&nbsp;·&nbsp; Quota: <span style="color:${risk ? 'var(--red)' : 'var(--green)'};">${p.blammos}/${required}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn btn-ghost" style="font-size:0.65rem;padding:0.3rem 0.6rem;" onclick="toggleAlive('${p.id}')">${p.alive ? 'Eliminate' : 'Revive'}</button>
+        <button class="btn btn-danger" style="font-size:0.65rem;padding:0.3rem 0.6rem;" onclick="removePlayer('${p.id}')">✕</button>
+      </div>
+    </div>
+  `}).join('');
+}
+
+function getTargetName(player) {
+  if (!player.alive) return '—';
+  if (!player.target) return 'Unassigned';
+  const t = state.players.find(p => p.id === player.target);
+  return t ? t.name : 'Unknown';
+}
+
+function renderBlammoSelect() {
+  const sel = document.getElementById('blammo-victim');
+  const alive = state.players.filter(p => p.alive);
+  sel.innerHTML = alive.length
+    ? alive.map(p => `<option value="${p.id}">${p.name}</option>`).join('')
+    : '<option value="">No active players</option>';
+  updateBlammoPreview();
+}
+
+function updateBlammoPreview() {
+  const sel = document.getElementById('blammo-victim');
+  const victimId = sel.value;
+  const victim = state.players.find(p => p.id === victimId);
+  const prev = document.getElementById('blammo-preview');
+  if (!victim) { prev.textContent = ''; return; }
+  const attacker = state.players.find(p => p.alive && p.target === victimId);
+  if (attacker) {
+    prev.textContent = `${attacker.name} blammos ${victim.name} → ${attacker.name} inherits ${victim.name}'s target`;
+  } else {
+    prev.textContent = `No active player is targeting ${victim.name}`;
+  }
+}
+
+document.addEventListener('change', e => { if (e.target.id === 'blammo-victim') updateBlammoPreview(); });
+
+function renderTargetsView() {
+  const el = document.getElementById('targets-view');
+  const alive = state.players.filter(p => p.alive);
+  if (!alive.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem 0;">No active players</div>'; return; }
+
+  el.innerHTML = `
+    <table class="targets-table">
+      <thead><tr><th>Player</th><th></th><th>Target</th></tr></thead>
+      <tbody>
+        ${alive.map(p => `
+          <tr>
+            <td>${p.name}</td>
+            <td class="target-arrow">→</td>
+            <td style="color:var(--green)">${getTargetName(p)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderLinksEditor() {
+  const el = document.getElementById('links-editor-list');
+  if (!state.links.length) { el.innerHTML = ''; return; }
+  el.innerHTML = state.links.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+      <div style="flex:1;">
+        <div>${l.label}</div>
+        <div style="color:var(--muted);font-size:0.7rem;">${l.url}</div>
+      </div>
+      <button class="btn btn-danger" style="font-size:0.65rem;padding:0.3rem 0.6rem;" onclick="removeLink(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ─── ADMIN ACTIONS ────────────────────────────────────────────────────────────
+
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function addPlayer() {
+  const input = document.getElementById('new-player-name');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+    alert('A player with that name already exists.');
+    return;
+  }
+  state.players.push({ id: uid(), name, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
+  input.value = '';
+  save();
+  renderAdmin();
+}
+
+function removePlayer(id) {
+  showConfirm('Remove Player', 'This will permanently remove the player and their target assignments.', () => {
+    state.players = state.players.filter(p => p.id !== id);
+    // Fix broken targets
+    state.players.forEach(p => { if (p.target === id) p.target = null; });
+    save();
+    renderAdmin();
+  });
+}
+
+function toggleAlive(id) {
+  const p = state.players.find(p => p.id === id);
+  if (!p) return;
+  p.alive = !p.alive;
+  save();
+  renderAdmin();
+}
+
+function recordBlammo() {
+  const victimId = document.getElementById('blammo-victim').value;
+  if (!victimId) return;
+  const victim = state.players.find(p => p.id === victimId);
+  if (!victim) return;
+  const attacker = state.players.find(p => p.alive && p.target === victimId);
+
+  const msgEl = document.getElementById('blammo-msg');
+
+  if (!attacker) {
+    msgEl.className = 'error';
+    msgEl.textContent = `No active player is assigned to target ${victim.name}. Cannot record.`;
+    return;
+  }
+
+  showConfirm(
+    'Record Blammo',
+    `${attacker.name} blammos ${victim.name}. ${victim.name} is eliminated. ${attacker.name} inherits ${victim.name}'s target. Continue?`,
+    () => {
+      const inheritedTarget = victim.target;
+      victim.alive = false;
+      attacker.blammos++;
+      attacker.weeklyBlammos = (attacker.weeklyBlammos || 0) + 1;
+      attacker.target = inheritedTarget;
+      save();
+      renderAdmin();
+      msgEl.className = 'success';
+      msgEl.textContent = `💥 Blammo recorded! ${attacker.name} now has ${attacker.blammos} blammo(s).`;
+      setTimeout(() => { msgEl.textContent = ''; }, 4000);
+    }
+  );
+}
+
+function saveRules() {
+  state.rules = document.getElementById('rules-editor').value;
+  save();
+  const btn = event.target;
+  btn.textContent = 'Saved!';
+  setTimeout(() => btn.textContent = 'Save Rules', 1500);
+}
+
+function addLink() {
+  const label = document.getElementById('new-link-label').value.trim();
+  const url = document.getElementById('new-link-url').value.trim();
+  if (!label || !url) { alert('Please fill in both label and URL.'); return; }
+  state.links.push({ label, url });
+  document.getElementById('new-link-label').value = '';
+  document.getElementById('new-link-url').value = '';
+  save();
+  renderLinksEditor();
+}
+
+function removeLink(i) {
+  state.links.splice(i, 1);
+  save();
+  renderLinksEditor();
+}
+
+function advanceWeek() {
+  const nextWeek = state.week + 1;
+  // Find at-risk players BEFORE advancing (need kills >= floor(nextWeek/2) after this advance)
+  // Per rules: every 2 weeks you need 1 more elimination. Required = floor(week/2) after that week passes.
+  // So at end of week 2, need 1. End of week 4, need 2. Etc.
+  // We flag anyone who will be at-risk at the START of the new week.
+  const requiredAfterAdvance = Math.floor(nextWeek / 2);
+  const atRisk = state.players.filter(p => p.alive && p.blammos < requiredAfterAdvance);
+  const atRiskNames = atRisk.map(p => p.name).join(', ');
+
+  let msg = `Move to Week ${nextWeek}? Alive players will get randomly reshuffled targets. Weekly blammo counts reset.`;
+  if (nextWeek % 2 === 0 && atRisk.length) {
+    msg += `\n\n⚠ QUOTA CHECK: After Week ${nextWeek}, players need ${requiredAfterAdvance} total blammo(s) to stay in. At-risk: ${atRiskNames}`;
+  }
+
+  showConfirm('Advance Week', msg, () => {
+    state.week = nextWeek;
+    // Reset weekly counts
+    state.players.forEach(p => { p.weeklyBlammos = 0; });
+    assignTargets();
+    save();
+    renderAdmin();
+    alert(`Week ${state.week} started! Targets reshuffled.${atRisk.length && nextWeek % 2 === 0 ? `\n\n⚠ ${atRisk.length} player(s) are now at risk of elimination for not meeting the quota.` : ''}`);
+  });
+}
+
+function fullReset() {
+  document.getElementById('reset-password-input').value = '';
+  document.getElementById('reset-error').style.display = 'none';
+  openModal('reset-modal');
+  setTimeout(() => document.getElementById('reset-password-input').focus(), 100);
+}
+
+function submitReset() {
+  const pw = document.getElementById('reset-password-input').value;
+  if (pw !== RESET_PASSWORD) {
+    document.getElementById('reset-error').style.display = 'block';
+    return;
+  }
+  closeModal('reset-modal');
+  state.players = [];
+  state.week = 1;
+  save();
+  renderAdmin();
+}
+
+function assignTargets() {
+  const alive = state.players.filter(p => p.alive);
+  if (alive.length < 2) return;
+  const shuffled = [...alive].sort(() => Math.random() - 0.5);
+  shuffled.forEach((p, i) => {
+    p.target = shuffled[(i + 1) % shuffled.length].id;
+  });
+}
+
+function clearStorage() {
+  document.getElementById('clear-password-input').value = '';
+  document.getElementById('clear-error').style.display = 'none';
+  openModal('clear-modal');
+  setTimeout(() => document.getElementById('clear-password-input').focus(), 100);
+}
+
+function submitClear() {
+  const pw = document.getElementById('clear-password-input').value;
+  if (pw !== CLEAR_PASSWORD) {
+    document.getElementById('clear-error').style.display = 'block';
+    return;
+  }
+  closeModal('clear-modal');
+  localStorage.removeItem('blammo-state');
+  state = defaultState();
+  save();
+  renderAdmin();
+  renderLeaderboard();
+  alert('Storage cleared. Default state restored, including the pre-set links.');
+}
+
+
+function loadTestData() {
+  showConfirm(
+    'Load Test Data',
+    'This will overwrite all current player data with fake test players. Rules and links will be kept. Continue?',
+    () => {
+      // Create 6 fake players
+      const names = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank'];
+      const ids = names.map(() => uid());
+
+      // Week 4 scenario: need 2 blammos to stay in
+      // Alice: 3 blammos (safe), Bob: 2 (safe), Carol: 1 (AT RISK), Dave: 0 (AT RISK, eliminated), Eve: 2 (safe), Frank: alive but 1 blammo (AT RISK)
+      state.players = [
+        { id: ids[0], name: 'Alice',  alive: true,  blammos: 3, weeklyBlammos: 1, target: ids[1] },
+        { id: ids[1], name: 'Bob',    alive: true,  blammos: 2, weeklyBlammos: 0, target: ids[2] },
+        { id: ids[2], name: 'Carol',  alive: true,  blammos: 1, weeklyBlammos: 0, target: ids[4] },
+        { id: ids[3], name: 'Dave',   alive: false, blammos: 0, weeklyBlammos: 0, target: null   },
+        { id: ids[4], name: 'Eve',    alive: true,  blammos: 2, weeklyBlammos: 1, target: ids[5] },
+        { id: ids[5], name: 'Frank',  alive: true,  blammos: 1, weeklyBlammos: 0, target: ids[0] },
+      ];
+      state.week = 4;
+
+      save();
+      renderAdmin();
+
+      // Show what to expect
+      alert(
+        '✅ Test data loaded! Here\'s what to verify:\n\n' +
+        '• Week: 4 (quota = 2 blammos required)\n' +
+        '• Alice (3 blammos) → Safe ✓\n' +
+        '• Bob (2 blammos) → Safe ✓\n' +
+        '• Carol (1 blammo) → ⚠ AT RISK\n' +
+        '• Dave (0 blammos) → Eliminated\n' +
+        '• Eve (2 blammos) → Safe ✓\n' +
+        '• Frank (1 blammo) → ⚠ AT RISK\n\n' +
+        'Target chain: Alice→Bob→Carol→Eve→Frank→Alice\n\n' +
+        'Try: record a blammo, advance the week, check weekly counts reset, check totals persist.'
+      );
+    }
+  );
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+renderLeaderboard();
+</script>
+</body>
+</html>
