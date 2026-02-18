@@ -653,7 +653,7 @@
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz03PFp89xv3Rg91qG-tOLvMIOnimMCIjupuQ5haQ82cIdS6rj7nLWjfsCRDjQHWBog/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiX8Vb2-KktXcJSuMJ0kY6Da3S-1ScP80q4oCEeo81mQAWhmme9eco_1iDvjXaQo68/exec';
 
 let state = load();
 let isAdmin = false;
@@ -1222,15 +1222,19 @@ async function sendTestEmail() {
   const t = state.emailTemplates[currentTemplate];
   const filled = fillTemplate(t, vars);
 
-  await sendEmail({
+  sendEmail({
     type: 'raw',
     to: addr,
     subject: filled.subject,
     htmlBody: bodyToHtml(filled.body)
   });
-  msgEl.className = 'success';
-  msgEl.textContent = 'Test sent! Check your inbox.';
-  setTimeout(() => { msgEl.textContent = ''; }, 4000);
+
+  // no-cors means we never get a response — assume sent after short delay
+  setTimeout(() => {
+    msgEl.className = 'success';
+    msgEl.textContent = 'Sent! Check your inbox (and spam).';
+    setTimeout(() => { msgEl.textContent = ''; }, 5000);
+  }, 1500);
 }
 
 
@@ -1372,11 +1376,12 @@ async function sendEmail(payload) {
   if (!APPS_SCRIPT_URL) return;
   payload.signoff = state.emailSignoff || 'Evan (Student Life Rep)';
   try {
+    const form = new FormData();
+    form.append('data', JSON.stringify(payload));
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: form
     });
   } catch (e) {
     console.error('Email send failed:', e);
