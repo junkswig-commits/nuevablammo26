@@ -632,7 +632,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v2.2 — Feb 17 2026';
+const VERSION = 'v2.3 — Feb 17 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
@@ -1366,12 +1366,13 @@ function checkForWinner() {
   }
 }
 
-async function sendEmail(payload) {
+function sendEmail(payload) {
   if (!APPS_SCRIPT_URL) return;
   payload.signoff = state.emailSignoff || 'Evan (Student Life Rep)';
   try {
     const url = APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
-    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    const img = new Image();
+    img.src = url;
   } catch (e) {
     console.error('Email send failed:', e);
   }
