@@ -491,25 +491,6 @@
       </div>
     </div>
 
-    <!-- EMAIL SETTINGS -->
-    <div class="admin-section">
-      <h3>✉ Email Settings</h3>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Customize the sign-off line that appears at the bottom of all emails.</p>
-      <div class="form-group">
-        <label>Sign-off name & title</label>
-        <input type="text" id="email-signoff" placeholder="e.g. Evan (Student Life Rep)">
-      </div>
-      <div class="form-group">
-        <label>Test email — send a sample target email to this address</label>
-        <div class="inline-form">
-          <input type="email" id="test-email-addr" placeholder="your@email.com">
-          <button class="btn btn-ghost" onclick="sendTestEmail()">Send Test</button>
-        </div>
-        <div id="test-email-msg"></div>
-      </div>
-      <button class="btn btn-primary" onclick="saveEmailSettings()">Save</button>
-    </div>
-
     <!-- EMAIL TEMPLATES -->
     <div class="admin-section">
       <h3>✉ Email Templates</h3>
@@ -716,27 +697,27 @@ SECTION 3 — SPIRIT POINTS
     emailTemplates: {
       blammo_attacker: {
         subject: "Shhh! Your NEW Blammo target is...",
-        body: "Hi {attackerName},\n\nYou successfully blammo'd {victimName}. They've been eliminated.\n\nShhh... your new target is:\n\n{targetName}\n\nRemember: tap them with your green spoon while they're not holding theirs, and say \"Blammo!\"\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+        body: "Hi {attackerName},\n\n🎉 Welcome to Week {week} of Blammo 2026! 🎉\n\nShhh! Your target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
       },
       blammo_victim: {
         subject: "You've been Blammo'd - Blammo 2026",
-        body: "Hi {victimName},\n\nYou've been eliminated. {attackerName} got you while your spoon wasn't in hand. Your run in Blammo 2026 is over.\n\nCheck the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+        body: "Hi {victimName},\n\n{attackerName} got you! You've been eliminated from Blammo 2026. 😔\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing — better luck next year!\n{signoff}"
       },
       new_week: {
-        subject: "Blammo Week {week} - Your new target is inside",
-        body: "Hi {playerName},\n\nWelcome to Week {week} of Blammo 2026!\n\nShhh... your new target is:\n\n{targetName}\n\nRemember: tap them with your green spoon while they're not holding theirs, and say \"Blammo!\"\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+        subject: "🥄 Week {week} of Blammo 2026 — Your new target is...",
+        body: "Hi {playerName},\n\n🎉 Welcome to Week {week} of Blammo 2026! 🎉\n\nTargets have been reshuffled. Shhh! Your new target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
       },
       inactive: {
         subject: "Eliminated from Blammo 2026 - Inactivity",
-        body: "Hi {playerName},\n\nYou've been eliminated due to inactivity. Per the rules, players need at least one elimination every two weeks to stay in the game.\n\nCheck the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+        body: "Hi {playerName},\n\nUnfortunately, you've been eliminated from Blammo 2026 due to not meeting the elimination quota. Per the rules, players need at least one Blammo every two weeks to stay in.\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing — better luck next year!\n{signoff}"
       },
       winner: {
-        subject: "YOU WON BLAMMO 2026!!!",
-        body: "Hi {winnerName},\n\nYOU WON BLAMMO 2026! You are the last player standing. Incredible.\n\nCheck the leaderboard to see your final stats: {siteUrl}\n\nCongratulations!\n{signoff}"
+        subject: "🏆 YOU WON BLAMMO 2026!!!",
+        body: "Hi {winnerName},\n\n🎉🎉🎉 YOU WON BLAMMO 2026!!! 🎉🎉🎉\n\nYou are the last player standing. Absolutely incredible — congratulations!\n\nCheck out the final leaderboard: {siteUrl}\n\nWell played!\n{signoff}"
       },
       game_over: {
-        subject: "Blammo 2026 is over - {winnerName} wins!",
-        body: "Hi {playerName},\n\nBlammo 2026 has ended. {winnerName} is the last player standing and wins the game!\n\nCheck the final leaderboard to see how everyone ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+        subject: "Blammo 2026 is over — {winnerName} wins!",
+        body: "Hi {playerName},\n\nBlammo 2026 has come to an end! 🎉\n\n{winnerName} is the last player standing and wins the game. Congratulations to them!\n\nCheck out the final leaderboard to see how everyone ranked: {siteUrl}\n\nThanks for playing — hope to see you next year!\n{signoff}"
       }
     },
     links: [
