@@ -491,6 +491,25 @@
       </div>
     </div>
 
+    <!-- EMAIL SETTINGS -->
+    <div class="admin-section">
+      <h3>✉ Email Settings</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Customize the sign-off line that appears at the bottom of all emails.</p>
+      <div class="form-group">
+        <label>Sign-off name & title</label>
+        <input type="text" id="email-signoff" placeholder="e.g. Evan (Student Life Rep)">
+      </div>
+      <div class="form-group">
+        <label>Test email — send a sample target email to this address</label>
+        <div class="inline-form">
+          <input type="email" id="test-email-addr" placeholder="your@email.com">
+          <button class="btn btn-ghost" onclick="sendTestEmail()">Send Test</button>
+        </div>
+        <div id="test-email-msg"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveEmailSettings()">Save</button>
+    </div>
+
     <!-- TEST MODE -->
     <div class="admin-section" style="border-left:3px solid #888;">
       <h3 style="color:var(--muted);">🧪 Test Mode</h3>
@@ -640,6 +659,7 @@ SECTION 3 — SPIRIT POINTS
 • First/fastest Blammo of the game: +1,000 spirit points for your grade
 • 1st place winner: +50,000 | 2nd place: +30,000 | 3rd place: +10,000
   (Points stack if multiple winners are from the same grade)`,
+    emailSignoff: 'Evan (Student Life Rep)',
     links: [
       { label: 'Report a Blammo', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfvyItBg1J9hnmoKezlfBXnWTPe8Jln-w2jITz3c0orHjD21w/viewform?usp=publish-editor' },
       { label: 'Blammo Sign-ups', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeAQaPeld771rtY8yTAYNuS61dX_milkaYJCFqP3MQj3A_35w/viewform?usp=publish-editor' }
@@ -787,6 +807,7 @@ function renderAdmin() {
   renderBlammoSelect();
   renderTargetsView();
   document.getElementById('rules-editor').value = state.rules;
+  document.getElementById('email-signoff').value = state.emailSignoff || 'Evan (Student Life Rep)';
   renderLinksEditor();
   // Update quota info
   const nextEven = state.week % 2 === 0 ? state.week : state.week + 1;
@@ -989,9 +1010,15 @@ function removePlayer(id) {
 function toggleAlive(id) {
   const p = state.players.find(p => p.id === id);
   if (!p) return;
+  const wasAlive = p.alive;
   p.alive = !p.alive;
   save();
   renderAdmin();
+  // If we just eliminated them (not revived), send inactive email
+  if (wasAlive && !p.alive) {
+    sendInactiveEmail(p);
+    checkForWinner();
+  }
 }
 
 function recordBlammo() {
@@ -1027,9 +1054,36 @@ function recordBlammo() {
       // Send emails
       const newTarget = state.players.find(p => p.id === inheritedTarget);
       sendBlammoEmails(attacker, victim, newTarget);
+      checkForWinner();
     }
   );
 }
+
+function saveEmailSettings() {
+  state.emailSignoff = document.getElementById('email-signoff').value.trim() || 'Evan (Student Life Rep)';
+  save();
+  const btn = event.target;
+  btn.textContent = 'Saved!';
+  setTimeout(() => btn.textContent = 'Save', 1500);
+}
+
+async function sendTestEmail() {
+  const addr = document.getElementById('test-email-addr').value.trim();
+  const msgEl = document.getElementById('test-email-msg');
+  if (!addr) { msgEl.className = 'error'; msgEl.textContent = 'Enter an email address.'; return; }
+  msgEl.className = ''; msgEl.textContent = 'Sending...';
+  await sendEmail({
+    type: 'blammo',
+    week: state.week,
+    attacker: { name: 'Test Player', email: addr },
+    victim:   { name: 'Fake Victim', email: '' },
+    newTarget: { name: 'Sample Target' }
+  });
+  msgEl.className = 'success';
+  msgEl.textContent = 'Test email sent! Check your inbox.';
+  setTimeout(() => { msgEl.textContent = ''; }, 4000);
+}
+
 
 function saveRules() {
   state.rules = document.getElementById('rules-editor').value;
@@ -1098,6 +1152,7 @@ function advanceWeek() {
     save();
     renderAdmin();
     alert(`Week ${state.week} started! Targets reshuffled.${atRisk.length && nextWeek % 2 === 0 ? `\n\n⚠ ${atRisk.length} player(s) are now at risk of elimination for not meeting the quota.` : ''}`);
+    sendNewWeekEmails();
   });
 }
 
@@ -1153,16 +1208,20 @@ function submitClear() {
 }
 
 
-async function sendBlammoEmails(attacker, victim, newTarget) {
-  if (!APPS_SCRIPT_URL) return; // Not configured yet
+function checkForWinner() {
+  const alive = state.players.filter(p => p.alive);
+  if (alive.length === 1) {
+    const winner = alive[0];
+    setTimeout(() => {
+      alert(`🏆 ${winner.name} is the last player standing! BLAMMO 2026 is over!`);
+      sendWinnerEmails(winner);
+    }, 500);
+  }
+}
 
-  const payload = {
-    week: state.week,
-    attacker: { name: attacker.name, email: attacker.email || '' },
-    victim:   { name: victim.name,   email: victim.email   || '' },
-    newTarget: newTarget ? { name: newTarget.name } : null
-  };
-
+async function sendEmail(payload) {
+  if (!APPS_SCRIPT_URL) return;
+  payload.signoff = state.emailSignoff || 'Evan (Student Life Rep)';
   try {
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -1173,6 +1232,39 @@ async function sendBlammoEmails(attacker, victim, newTarget) {
   } catch (e) {
     console.error('Email send failed:', e);
   }
+}
+
+async function sendBlammoEmails(attacker, victim, newTarget) {
+  await sendEmail({
+    type: 'blammo',
+    week: state.week,
+    attacker: { name: attacker.name, email: attacker.email || '' },
+    victim:   { name: victim.name,   email: victim.email   || '' },
+    newTarget: newTarget ? { name: newTarget.name } : null
+  });
+}
+
+async function sendNewWeekEmails() {
+  const alive = state.players.filter(p => p.alive && p.email && p.target);
+  if (!alive.length) return;
+  const players = alive.map(p => ({
+    name: p.name,
+    email: p.email,
+    targetName: getTargetName(p)
+  }));
+  await sendEmail({ type: 'new_week', week: state.week, players });
+}
+
+async function sendInactiveEmail(player) {
+  await sendEmail({ type: 'eliminated_inactive', player: { name: player.name, email: player.email || '' } });
+}
+
+async function sendWinnerEmails(winner) {
+  await sendEmail({
+    type: 'winner',
+    winner: { name: winner.name, email: winner.email || '' },
+    allPlayers: state.players.map(p => ({ name: p.name, email: p.email || '' }))
+  });
 }
 
 
