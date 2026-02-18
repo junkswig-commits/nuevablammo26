@@ -510,6 +510,59 @@
       <button class="btn btn-primary" onclick="saveEmailSettings()">Save</button>
     </div>
 
+    <!-- EMAIL TEMPLATES -->
+    <div class="admin-section">
+      <h3>✉ Email Templates</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Edit the content of each email. Use these variables and they'll be filled in automatically when sent:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem;">
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{playerName}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{attackerName}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{victimName}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{targetName}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{winnerName}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{week}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{signoff}</span>
+        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{siteUrl}</span>
+      </div>
+
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;" id="template-tabs">
+        <button class="btn btn-ghost template-tab active" onclick="switchTemplate('blammo_attacker', this)" style="font-size:0.65rem;">New Target</button>
+        <button class="btn btn-ghost template-tab" onclick="switchTemplate('blammo_victim', this)" style="font-size:0.65rem;">Eliminated</button>
+        <button class="btn btn-ghost template-tab" onclick="switchTemplate('new_week', this)" style="font-size:0.65rem;">New Week</button>
+        <button class="btn btn-ghost template-tab" onclick="switchTemplate('inactive', this)" style="font-size:0.65rem;">Inactivity</button>
+        <button class="btn btn-ghost template-tab" onclick="switchTemplate('winner', this)" style="font-size:0.65rem;">Winner</button>
+        <button class="btn btn-ghost template-tab" onclick="switchTemplate('game_over', this)" style="font-size:0.65rem;">Game Over</button>
+      </div>
+
+      <div id="template-editor-wrap">
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="template-subject">
+        </div>
+        <div class="form-group">
+          <label>Body</label>
+          <textarea id="template-body" style="min-height:160px;"></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="email" id="test-email-addr" placeholder="test@email.com" style="max-width:200px;">
+          <button class="btn btn-ghost" onclick="sendTestEmail()" style="font-size:0.65rem;">Send Test</button>
+        </div>
+        <div id="test-email-msg" style="font-size:0.75rem;"></div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <label>Sign-off (appears as {signoff})</label>
+        <div class="inline-form" style="margin-top:0.4rem;">
+          <input type="text" id="email-signoff" placeholder="e.g. Evan (Student Life Rep)">
+          <button class="btn btn-ghost" onclick="saveSignoff()">Save</button>
+        </div>
+      </div>
+    </div>
+
     <!-- TEST MODE -->
     <div class="admin-section" style="border-left:3px solid #888;">
       <h3 style="color:var(--muted);">🧪 Test Mode</h3>
@@ -660,6 +713,32 @@ SECTION 3 — SPIRIT POINTS
 • 1st place winner: +50,000 | 2nd place: +30,000 | 3rd place: +10,000
   (Points stack if multiple winners are from the same grade)`,
     emailSignoff: 'Evan (Student Life Rep)',
+    emailTemplates: {
+      blammo_attacker: {
+        subject: "Shhh! Your NEW Blammo target is...",
+        body: "Hi {attackerName},\n\nYou successfully blammo'd {victimName}. They've been eliminated.\n\nShhh... your new target is:\n\n{targetName}\n\nRemember: tap them with your green spoon while they're not holding theirs, and say \"Blammo!\"\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+      },
+      blammo_victim: {
+        subject: "You've been Blammo'd - Blammo 2026",
+        body: "Hi {victimName},\n\nYou've been eliminated. {attackerName} got you while your spoon wasn't in hand. Your run in Blammo 2026 is over.\n\nCheck the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+      },
+      new_week: {
+        subject: "Blammo Week {week} - Your new target is inside",
+        body: "Hi {playerName},\n\nWelcome to Week {week} of Blammo 2026!\n\nShhh... your new target is:\n\n{targetName}\n\nRemember: tap them with your green spoon while they're not holding theirs, and say \"Blammo!\"\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+      },
+      inactive: {
+        subject: "Eliminated from Blammo 2026 - Inactivity",
+        body: "Hi {playerName},\n\nYou've been eliminated due to inactivity. Per the rules, players need at least one elimination every two weeks to stay in the game.\n\nCheck the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+      },
+      winner: {
+        subject: "YOU WON BLAMMO 2026!!!",
+        body: "Hi {winnerName},\n\nYOU WON BLAMMO 2026! You are the last player standing. Incredible.\n\nCheck the leaderboard to see your final stats: {siteUrl}\n\nCongratulations!\n{signoff}"
+      },
+      game_over: {
+        subject: "Blammo 2026 is over - {winnerName} wins!",
+        body: "Hi {playerName},\n\nBlammo 2026 has ended. {winnerName} is the last player standing and wins the game!\n\nCheck the final leaderboard to see how everyone ranked: {siteUrl}\n\nThanks for playing!\n{signoff}"
+      }
+    },
     links: [
       { label: 'Report a Blammo', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfvyItBg1J9hnmoKezlfBXnWTPe8Jln-w2jITz3c0orHjD21w/viewform?usp=publish-editor' },
       { label: 'Blammo Sign-ups', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeAQaPeld771rtY8yTAYNuS61dX_milkaYJCFqP3MQj3A_35w/viewform?usp=publish-editor' }
@@ -808,6 +887,7 @@ function renderAdmin() {
   renderTargetsView();
   document.getElementById('rules-editor').value = state.rules;
   document.getElementById('email-signoff').value = state.emailSignoff || 'Evan (Student Life Rep)';
+  loadTemplateEditor();
   renderLinksEditor();
   // Update quota info
   const nextEven = state.week % 2 === 0 ? state.week : state.week + 1;
@@ -1059,7 +1139,32 @@ function recordBlammo() {
   );
 }
 
-function saveEmailSettings() {
+let currentTemplate = 'blammo_attacker';
+
+function switchTemplate(key, btn) {
+  currentTemplate = key;
+  document.querySelectorAll('.template-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadTemplateEditor();
+}
+
+function loadTemplateEditor() {
+  const t = state.emailTemplates[currentTemplate];
+  document.getElementById('template-subject').value = t.subject;
+  document.getElementById('template-body').value = t.body;
+}
+
+function saveTemplate() {
+  if (!state.emailTemplates[currentTemplate]) return;
+  state.emailTemplates[currentTemplate].subject = document.getElementById('template-subject').value;
+  state.emailTemplates[currentTemplate].body = document.getElementById('template-body').value;
+  save();
+  const btn = event.target;
+  btn.textContent = 'Saved!';
+  setTimeout(() => btn.textContent = 'Save Template', 1500);
+}
+
+function saveSignoff() {
   state.emailSignoff = document.getElementById('email-signoff').value.trim() || 'Evan (Student Life Rep)';
   save();
   const btn = event.target;
@@ -1067,20 +1172,64 @@ function saveEmailSettings() {
   setTimeout(() => btn.textContent = 'Save', 1500);
 }
 
+function fillTemplate(template, vars) {
+  let subject = template.subject;
+  let body = template.body;
+  for (const [k, v] of Object.entries(vars)) {
+    const re = new RegExp(`\\{${k}\\}`, 'g');
+    subject = subject.replace(re, v || '');
+    body = body.replace(re, v || '');
+  }
+  return { subject, body };
+}
+
+function templateVars(extra) {
+  return Object.assign({
+    signoff: state.emailSignoff || 'Evan (Student Life Rep)',
+    siteUrl: 'https://junkswig-commits.github.io/nuevablammo26/',
+    week: state.week
+  }, extra);
+}
+
+function bodyToHtml(body) {
+  // Convert plain text template to simple HTML (newlines → <br>, URLs → links)
+  const escaped = body
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const linked = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" style="color:#1a73e8;">$1</a>');
+  const paragraphed = linked.split(/\n\n+/).map(p =>
+    '<p style="margin:0 0 1rem;line-height:1.6;">' + p.replace(/\n/g,'<br>') + '</p>'
+  ).join('');
+  return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:0;background:#ffffff;color:#111111;border:1px solid #e0e0e0;">
+    <div style="background:#111111;padding:1.25rem 2rem;">
+      <span style="font-size:1.5rem;font-weight:900;letter-spacing:0.15em;color:#39ff14;">BLAMMO</span>
+      <span style="font-size:0.75rem;color:#888;margin-left:0.75rem;letter-spacing:0.1em;">2026</span>
+    </div>
+    <div style="padding:2rem;">${paragraphed}</div>
+  </div>`;
+}
+
 async function sendTestEmail() {
   const addr = document.getElementById('test-email-addr').value.trim();
   const msgEl = document.getElementById('test-email-msg');
   if (!addr) { msgEl.className = 'error'; msgEl.textContent = 'Enter an email address.'; return; }
   msgEl.className = ''; msgEl.textContent = 'Sending...';
+
+  const vars = templateVars({
+    attackerName: 'Test Attacker', victimName: 'Test Victim',
+    targetName: 'Sample Target', playerName: 'Test Player',
+    winnerName: 'Test Winner'
+  });
+  const t = state.emailTemplates[currentTemplate];
+  const filled = fillTemplate(t, vars);
+
   await sendEmail({
-    type: 'blammo',
-    week: state.week,
-    attacker: { name: 'Test Player', email: addr },
-    victim:   { name: 'Fake Victim', email: '' },
-    newTarget: { name: 'Sample Target' }
+    type: 'raw',
+    to: addr,
+    subject: filled.subject,
+    htmlBody: bodyToHtml(filled.body)
   });
   msgEl.className = 'success';
-  msgEl.textContent = 'Test email sent! Check your inbox.';
+  msgEl.textContent = 'Test sent! Check your inbox.';
   setTimeout(() => { msgEl.textContent = ''; }, 4000);
 }
 
@@ -1235,36 +1384,47 @@ async function sendEmail(payload) {
 }
 
 async function sendBlammoEmails(attacker, victim, newTarget) {
-  await sendEmail({
-    type: 'blammo',
-    week: state.week,
-    attacker: { name: attacker.name, email: attacker.email || '' },
-    victim:   { name: victim.name,   email: victim.email   || '' },
-    newTarget: newTarget ? { name: newTarget.name } : null
-  });
+  if (attacker.email) {
+    const vars = templateVars({ attackerName: attacker.name, victimName: victim.name, targetName: newTarget ? newTarget.name : 'none — you may be the last one standing!' });
+    const filled = fillTemplate(state.emailTemplates.blammo_attacker, vars);
+    await sendEmail({ type: 'raw', to: attacker.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+  }
+  if (victim.email) {
+    const vars = templateVars({ victimName: victim.name, attackerName: attacker.name });
+    const filled = fillTemplate(state.emailTemplates.blammo_victim, vars);
+    await sendEmail({ type: 'raw', to: victim.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+  }
 }
 
 async function sendNewWeekEmails() {
   const alive = state.players.filter(p => p.alive && p.email && p.target);
-  if (!alive.length) return;
-  const players = alive.map(p => ({
-    name: p.name,
-    email: p.email,
-    targetName: getTargetName(p)
-  }));
-  await sendEmail({ type: 'new_week', week: state.week, players });
+  for (const p of alive) {
+    const vars = templateVars({ playerName: p.name, targetName: getTargetName(p) });
+    const filled = fillTemplate(state.emailTemplates.new_week, vars);
+    await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+  }
 }
 
 async function sendInactiveEmail(player) {
-  await sendEmail({ type: 'eliminated_inactive', player: { name: player.name, email: player.email || '' } });
+  if (!player.email) return;
+  const vars = templateVars({ playerName: player.name });
+  const filled = fillTemplate(state.emailTemplates.inactive, vars);
+  await sendEmail({ type: 'raw', to: player.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
 }
 
 async function sendWinnerEmails(winner) {
-  await sendEmail({
-    type: 'winner',
-    winner: { name: winner.name, email: winner.email || '' },
-    allPlayers: state.players.map(p => ({ name: p.name, email: p.email || '' }))
-  });
+  if (winner.email) {
+    const vars = templateVars({ winnerName: winner.name });
+    const filled = fillTemplate(state.emailTemplates.winner, vars);
+    await sendEmail({ type: 'raw', to: winner.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+  }
+  for (const p of state.players) {
+    if (p.email && p.name !== winner.name) {
+      const vars = templateVars({ playerName: p.name, winnerName: winner.name });
+      const filled = fillTemplate(state.emailTemplates.game_over, vars);
+      await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+    }
+  }
 }
 
 
