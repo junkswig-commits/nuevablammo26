@@ -632,11 +632,11 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v2.3 — Feb 17 2026';
+const VERSION = 'v2.7 — Feb 18 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiX8Vb2-KktXcJSuMJ0kY6Da3S-1ScP80q4oCEeo81mQAWhmme9eco_1iDvjXaQo68/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz03PFp89xv3Rg91qG-tOLvMIOnimMCIjupuQ5haQ82cIdS6rj7nLWjfsCRDjQHWBog/exec';
 
 let state = load();
 let isAdmin = false;
@@ -1220,7 +1220,7 @@ async function sendTestEmail() {
     type: 'raw',
     to: addr,
     subject: filled.subject,
-    htmlBody: bodyToHtml(filled.body)
+    body: filled.body
   });
 
   // no-cors means we never get a response — assume sent after short delay
@@ -1366,13 +1366,20 @@ function checkForWinner() {
   }
 }
 
-function sendEmail(payload) {
+async function sendEmail(payload) {
   if (!APPS_SCRIPT_URL) return;
-  payload.signoff = state.emailSignoff || 'Evan (Student Life Rep)';
+  const small = {
+    type: payload.type,
+    to: payload.to,
+    subject: payload.subject,
+    body: payload.body
+  };
   try {
-    const url = APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
-    const img = new Image();
-    img.src = url;
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(small)
+    });
   } catch (e) {
     console.error('Email send failed:', e);
   }
@@ -1382,12 +1389,12 @@ async function sendBlammoEmails(attacker, victim, newTarget) {
   if (attacker.email) {
     const vars = templateVars({ attackerName: attacker.name, victimName: victim.name, targetName: newTarget ? newTarget.name : 'none — you may be the last one standing!' });
     const filled = fillTemplate(state.emailTemplates.blammo_attacker, vars);
-    await sendEmail({ type: 'raw', to: attacker.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+    await sendEmail({ type: 'raw', to: attacker.email, subject: filled.subject, body: filled.body });
   }
   if (victim.email) {
     const vars = templateVars({ victimName: victim.name, attackerName: attacker.name });
     const filled = fillTemplate(state.emailTemplates.blammo_victim, vars);
-    await sendEmail({ type: 'raw', to: victim.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+    await sendEmail({ type: 'raw', to: victim.email, subject: filled.subject, body: filled.body });
   }
 }
 
@@ -1396,7 +1403,7 @@ async function sendNewWeekEmails() {
   for (const p of alive) {
     const vars = templateVars({ playerName: p.name, targetName: getTargetName(p) });
     const filled = fillTemplate(state.emailTemplates.new_week, vars);
-    await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+    await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, body: filled.body });
   }
 }
 
@@ -1404,20 +1411,20 @@ async function sendInactiveEmail(player) {
   if (!player.email) return;
   const vars = templateVars({ playerName: player.name });
   const filled = fillTemplate(state.emailTemplates.inactive, vars);
-  await sendEmail({ type: 'raw', to: player.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+  await sendEmail({ type: 'raw', to: player.email, subject: filled.subject, body: filled.body });
 }
 
 async function sendWinnerEmails(winner) {
   if (winner.email) {
     const vars = templateVars({ winnerName: winner.name });
     const filled = fillTemplate(state.emailTemplates.winner, vars);
-    await sendEmail({ type: 'raw', to: winner.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+    await sendEmail({ type: 'raw', to: winner.email, subject: filled.subject, body: filled.body });
   }
   for (const p of state.players) {
     if (p.email && p.name !== winner.name) {
       const vars = templateVars({ playerName: p.name, winnerName: winner.name });
       const filled = fillTemplate(state.emailTemplates.game_over, vars);
-      await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, htmlBody: bodyToHtml(filled.body) });
+      await sendEmail({ type: 'raw', to: p.email, subject: filled.subject, body: filled.body });
     }
   }
 }
