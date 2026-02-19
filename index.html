@@ -632,7 +632,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v2.8 — Feb 18 2026';
+const VERSION = 'v2.9 — Feb 19 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
@@ -1326,10 +1326,48 @@ function submitReset() {
 function assignTargets() {
   const alive = state.players.filter(p => p.alive);
   if (alive.length < 2) return;
-  const shuffled = [...alive].sort(() => Math.random() - 0.5);
-  shuffled.forEach((p, i) => {
-    p.target = shuffled[(i + 1) % shuffled.length].id;
-  });
+
+  // Save previous targets before reassigning
+  const prevTarget = {};
+  alive.forEach(p => { prevTarget[p.id] = p.target; });
+
+  const maxAttempts = 200;
+  let attempts = 0;
+  let success = false;
+
+  while (attempts < maxAttempts && !success) {
+    attempts++;
+    const shuffled = [...alive].sort(() => Math.random() - 0.5);
+    const proposed = {};
+    shuffled.forEach((p, i) => {
+      proposed[p.id] = shuffled[(i + 1) % shuffled.length].id;
+    });
+
+    // Check constraints:
+    // 1. No mutual targeting (A→B and B→A)
+    // 2. No same target as last week
+    let valid = true;
+    for (const p of alive) {
+      const myTarget = proposed[p.id];
+      // Mutual targeting check
+      if (proposed[myTarget] === p.id) { valid = false; break; }
+      // Repeat target check (only if more than 2 players, otherwise unavoidable)
+      if (alive.length > 2 && myTarget === prevTarget[p.id]) { valid = false; break; }
+    }
+
+    if (valid) {
+      alive.forEach(p => { p.target = proposed[p.id]; });
+      success = true;
+    }
+  }
+
+  // Fallback: if no valid assignment found, just do a simple circular shuffle
+  if (!success) {
+    const shuffled = [...alive].sort(() => Math.random() - 0.5);
+    shuffled.forEach((p, i) => {
+      p.target = shuffled[(i + 1) % shuffled.length].id;
+    });
+  }
 }
 
 function clearStorage() {
