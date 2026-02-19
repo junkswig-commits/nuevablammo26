@@ -632,7 +632,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v2.7 — Feb 18 2026';
+const VERSION = 'v2.8 — Feb 18 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
@@ -699,27 +699,27 @@ SECTION 3 — SPIRIT POINTS
     emailTemplates: {
       blammo_attacker: {
         subject: "Shhh! Your NEW Blammo target is...",
-        body: "Hi {attackerName},\n\n🎉 Welcome to Week {week} of Blammo 2026! 🎉\n\nShhh! Your target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+        body: "Hi {attackerName},\n\nWelcome to Week {week} of Blammo 2026!\n\nShhh! Your target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
       },
       blammo_victim: {
         subject: "You've been Blammo'd - Blammo 2026",
-        body: "Hi {victimName},\n\n{attackerName} got you! You've been eliminated from Blammo 2026. 😔\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing — better luck next year!\n{signoff}"
+        body: "Hi {victimName},\n\n{attackerName} got you! You've been eliminated from Blammo 2026.\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing - better luck next year!\n{signoff}"
       },
       new_week: {
-        subject: "🥄 Week {week} of Blammo 2026 — Your new target is...",
-        body: "Hi {playerName},\n\n🎉 Welcome to Week {week} of Blammo 2026! 🎉\n\nTargets have been reshuffled. Shhh! Your new target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
+        subject: "Week {week} of Blammo 2026 - Your new target is inside",
+        body: "Hi {playerName},\n\nWelcome to Week {week} of Blammo 2026!\n\nTargets have been reshuffled. Shhh! Your new target is...\n\n{targetName}\n\nAs a reminder, here is the website with the leaderboard and rules: {siteUrl}\n\nGood luck, and happy Blammo-ing!\n{signoff}"
       },
       inactive: {
         subject: "Eliminated from Blammo 2026 - Inactivity",
-        body: "Hi {playerName},\n\nUnfortunately, you've been eliminated from Blammo 2026 due to not meeting the elimination quota. Per the rules, players need at least one Blammo every two weeks to stay in.\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing — better luck next year!\n{signoff}"
+        body: "Hi {playerName},\n\nUnfortunately, you've been eliminated from Blammo 2026 due to not meeting the elimination quota. Per the rules, players need at least one Blammo every two weeks to stay in.\n\nCheck out the leaderboard to see how you ranked: {siteUrl}\n\nThanks for playing - better luck next year!\n{signoff}"
       },
       winner: {
-        subject: "🏆 YOU WON BLAMMO 2026!!!",
-        body: "Hi {winnerName},\n\n🎉🎉🎉 YOU WON BLAMMO 2026!!! 🎉🎉🎉\n\nYou are the last player standing. Absolutely incredible — congratulations!\n\nCheck out the final leaderboard: {siteUrl}\n\nWell played!\n{signoff}"
+        subject: "YOU WON BLAMMO 2026!!!",
+        body: "Hi {winnerName},\n\nYOU WON BLAMMO 2026!!!\n\nYou are the last player standing. Absolutely incredible - congratulations!\n\nCheck out the final leaderboard: {siteUrl}\n\nWell played!\n{signoff}"
       },
       game_over: {
-        subject: "Blammo 2026 is over — {winnerName} wins!",
-        body: "Hi {playerName},\n\nBlammo 2026 has come to an end! 🎉\n\n{winnerName} is the last player standing and wins the game. Congratulations to them!\n\nCheck out the final leaderboard to see how everyone ranked: {siteUrl}\n\nThanks for playing — hope to see you next year!\n{signoff}"
+        subject: "Blammo 2026 is over - {winnerName} wins!",
+        body: "Hi {playerName},\n\nBlammo 2026 has come to an end!\n\n{winnerName} is the last player standing and wins the game. Congratulations to them!\n\nCheck out the final leaderboard to see how everyone ranked: {siteUrl}\n\nThanks for playing - hope to see you next year!\n{signoff}"
       }
     },
     links: [
