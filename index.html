@@ -434,6 +434,7 @@
       <h3>🎯 Players</h3>
       <div class="inline-form">
         <input type="text" id="new-player-name" placeholder="Player name..." onkeydown="if(event.key==='Enter')addPlayer()">
+        <input type="email" id="new-player-email" placeholder="Email..." onkeydown="if(event.key==='Enter')addPlayer()">
         <input type="text" id="new-player-grade" placeholder="Grade" style="max-width:80px;" onkeydown="if(event.key==='Enter')addPlayer()">
         <button class="btn btn-primary" onclick="addPlayer()">Add</button>
       </div>
@@ -461,16 +462,28 @@
     <!-- TARGETS VIEW -->
     <div class="admin-section">
       <h3>👁 Current Target Chain</h3>
-      <div id="targets-view"></div>
+      <div id="targets-view-locked" style="display:flex;gap:0.5rem;align-items:center;">
+        <input type="password" id="targets-password" placeholder="Password to reveal..." style="max-width:220px;" onkeydown="if(event.key==='Enter')unlockTargets()">
+        <button class="btn btn-ghost" onclick="unlockTargets()">Reveal</button>
+        <div id="targets-pw-error" class="error" style="display:none;">Incorrect password.</div>
+      </div>
+      <div id="targets-view" style="display:none;"></div>
     </div>
 
     <!-- RULES EDITOR -->
     <div class="admin-section">
       <h3>📋 Edit Rules</h3>
-      <div class="form-group">
-        <textarea id="rules-editor"></textarea>
+      <div id="rules-locked" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+        <input type="password" id="rules-password" placeholder="Password to edit..." style="max-width:220px;" onkeydown="if(event.key==='Enter')unlockRules()">
+        <button class="btn btn-ghost" onclick="unlockRules()">Unlock</button>
+        <div id="rules-pw-error" class="error" style="display:none;">Incorrect password.</div>
       </div>
-      <button class="btn btn-primary" onclick="saveRules()">Save Rules</button>
+      <div id="rules-editor-wrap" style="display:none;">
+        <div class="form-group">
+          <textarea id="rules-editor"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveRules()">Save Rules</button>
+      </div>
     </div>
 
     <!-- LINKS EDITOR -->
@@ -494,68 +507,69 @@
     <!-- EMAIL TEMPLATES -->
     <div class="admin-section">
       <h3>✉ Email Templates</h3>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Edit the content of each email. Use these variables and they'll be filled in automatically when sent:</p>
-      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem;">
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{playerName}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{attackerName}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{victimName}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{targetName}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{winnerName}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{week}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{signoff}</span>
-        <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{siteUrl}</span>
+      <div id="email-locked" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+        <input type="password" id="email-password" placeholder="Password to edit..." style="max-width:220px;" onkeydown="if(event.key==='Enter')unlockEmail()">
+        <button class="btn btn-ghost" onclick="unlockEmail()">Unlock</button>
+        <div id="email-pw-error" class="error" style="display:none;">Incorrect password.</div>
       </div>
-
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;" id="template-tabs">
-        <button class="btn btn-ghost template-tab active" onclick="switchTemplate('blammo_attacker', this)" style="font-size:0.65rem;">New Target</button>
-        <button class="btn btn-ghost template-tab" onclick="switchTemplate('blammo_victim', this)" style="font-size:0.65rem;">Eliminated</button>
-        <button class="btn btn-ghost template-tab" onclick="switchTemplate('new_week', this)" style="font-size:0.65rem;">New Week</button>
-        <button class="btn btn-ghost template-tab" onclick="switchTemplate('inactive', this)" style="font-size:0.65rem;">Inactivity</button>
-        <button class="btn btn-ghost template-tab" onclick="switchTemplate('winner', this)" style="font-size:0.65rem;">Winner</button>
-        <button class="btn btn-ghost template-tab" onclick="switchTemplate('game_over', this)" style="font-size:0.65rem;">Game Over</button>
-      </div>
-
-      <div id="template-editor-wrap">
-        <div class="form-group">
-          <label>Subject</label>
-          <input type="text" id="template-subject">
+      <div id="email-editor-wrap" style="display:none;">
+        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Edit the content of each email. Use these variables and they'll be filled in automatically when sent:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem;">
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{playerName}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{attackerName}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{victimName}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{targetName}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{winnerName}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{week}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{signoff}</span>
+          <span style="font-size:0.7rem;background:var(--bg);border:1px solid var(--border);padding:0.2rem 0.5rem;color:var(--green);">{siteUrl}</span>
         </div>
-        <div class="form-group">
-          <label>Body</label>
-          <textarea id="template-body" style="min-height:160px;"></textarea>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;" id="template-tabs">
+          <button class="btn btn-ghost template-tab active" onclick="switchTemplate('blammo_attacker', this)" style="font-size:0.65rem;">New Target</button>
+          <button class="btn btn-ghost template-tab" onclick="switchTemplate('blammo_victim', this)" style="font-size:0.65rem;">Eliminated</button>
+          <button class="btn btn-ghost template-tab" onclick="switchTemplate('new_week', this)" style="font-size:0.65rem;">New Week</button>
+          <button class="btn btn-ghost template-tab" onclick="switchTemplate('inactive', this)" style="font-size:0.65rem;">Inactivity</button>
+          <button class="btn btn-ghost template-tab" onclick="switchTemplate('winner', this)" style="font-size:0.65rem;">Winner</button>
+          <button class="btn btn-ghost template-tab" onclick="switchTemplate('game_over', this)" style="font-size:0.65rem;">Game Over</button>
+        </div>
+        <div id="template-editor-wrap">
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="template-subject">
+          </div>
+          <div class="form-group">
+            <label>Body</label>
+            <textarea id="template-body" style="min-height:160px;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <input type="email" id="test-email-addr" placeholder="test@email.com" style="max-width:200px;">
+            <button class="btn btn-ghost" onclick="sendTestEmail()" style="font-size:0.65rem;">Send Test</button>
+          </div>
+          <div id="test-email-msg" style="font-size:0.75rem;"></div>
+        </div>
+        <div style="margin-top:1rem;">
+          <label>Sign-off (appears as {signoff})</label>
+          <div class="inline-form" style="margin-top:0.4rem;">
+            <input type="text" id="email-signoff" placeholder="e.g. Evan (Student Life Rep)">
+            <button class="btn btn-ghost" onclick="saveSignoff()">Save</button>
+          </div>
         </div>
       </div>
-
-      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <input type="email" id="test-email-addr" placeholder="test@email.com" style="max-width:200px;">
-          <button class="btn btn-ghost" onclick="sendTestEmail()" style="font-size:0.65rem;">Send Test</button>
-        </div>
-        <div id="test-email-msg" style="font-size:0.75rem;"></div>
-      </div>
-
-      <div style="margin-top:1rem;">
-        <label>Sign-off (appears as {signoff})</label>
-        <div class="inline-form" style="margin-top:0.4rem;">
-          <input type="text" id="email-signoff" placeholder="e.g. Evan (Student Life Rep)">
-          <button class="btn btn-ghost" onclick="saveSignoff()">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TEST MODE -->
-    <div class="admin-section" style="border-left:3px solid #888;">
-      <h3 style="color:var(--muted);">🧪 Test Mode</h3>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Populate the game with fake players and blammo history to verify everything works correctly. This will overwrite current data.</p>
-      <button class="btn btn-ghost" onclick="loadTestData()">Load Test Data</button>
     </div>
 
     <!-- WEEK -->
     <div class="admin-section danger-zone">
       <h3>⚠ Week Management</h3>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Advancing the week reshuffles targets randomly among alive players and resets weekly kill counts. Per the rules, every 2 weeks players need 1 more total elimination — or they're out. Quota check: need <strong style="color:var(--yellow)" id="current-quota">—</strong> blammo(s) by end of week <strong style="color:var(--yellow)" id="next-even-week">—</strong>.</p>
-      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+      <div id="week-locked" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;">
+        <input type="password" id="week-password" placeholder="Password to unlock..." style="max-width:220px;" onkeydown="if(event.key==='Enter')unlockWeek()">
+        <button class="btn btn-ghost" onclick="unlockWeek()">Unlock</button>
+        <div id="week-pw-error" class="error" style="display:none;">Incorrect password.</div>
+      </div>
+      <div id="week-buttons" style="display:none;gap:0.75rem;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="assignInitialTargets()">🎯 Assign Initial Targets</button>
         <button class="btn btn-danger" onclick="advanceWeek()">Advance to Next Week</button>
         <button class="btn btn-danger" onclick="fullReset()">Full Reset (New Game)</button>
@@ -632,7 +646,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v3.0 — Feb 19 2026';
+const VERSION = 'v3.2 — Feb 20 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
@@ -822,7 +836,10 @@ function showConfirm(title, msg, cb) {
 function renderLeaderboard() {
   document.getElementById('week-badge').textContent = `Week ${state.week}`;
   const el = document.getElementById('leaderboard-content');
-  const players = [...state.players].sort((a, b) => b.blammos - a.blammos);
+  const players = [...state.players].sort((a, b) => {
+    if (a.alive !== b.alive) return a.alive ? -1 : 1;
+    return b.blammos - a.blammos;
+  });
 
   if (!players.length) {
     el.innerHTML = '<div class="empty-state">No players yet</div>';
@@ -879,7 +896,6 @@ function renderAdmin() {
   renderAtRisk();
   renderBlammoSelect();
   renderTargetsView();
-  document.getElementById('rules-editor').value = state.rules;
   document.getElementById('email-signoff').value = state.emailSignoff || 'Evan (Student Life Rep)';
   loadTemplateEditor();
   renderLinksEditor();
@@ -1029,16 +1045,20 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 
 function addPlayer() {
   const input = document.getElementById('new-player-name');
+  const emailInput = document.getElementById('new-player-email');
   const gradeInput = document.getElementById('new-player-grade');
   const name = input.value.trim();
+  const email = emailInput.value.trim();
   const grade = gradeInput.value.trim();
-  if (!name) return;
+  if (!name) { alert('Please enter a player name.'); return; }
+  if (!email) { alert('Please enter an email address.'); return; }
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     alert('A player with that name already exists.');
     return;
   }
-  state.players.push({ id: uid(), name, grade, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
+  state.players.push({ id: uid(), name, grade, email, alive: true, blammos: 0, weeklyBlammos: 0, target: null });
   input.value = '';
+  emailInput.value = '';
   gradeInput.value = '';
   save();
   renderAdmin();
@@ -1235,6 +1255,43 @@ async function sendTestEmail() {
     msgEl.textContent = 'Sent! Check your inbox (and spam).';
     setTimeout(() => { msgEl.textContent = ''; }, 5000);
   }, 1500);
+}
+
+
+function unlockTargets() {
+  const pw = document.getElementById('targets-password').value;
+  if (pw !== RESET_PASSWORD) { document.getElementById('targets-pw-error').style.display = 'block'; return; }
+  document.getElementById('targets-pw-error').style.display = 'none';
+  document.getElementById('targets-view-locked').style.display = 'none';
+  document.getElementById('targets-view').style.display = 'block';
+  renderTargetsView();
+}
+
+function unlockRules() {
+  const pw = document.getElementById('rules-password').value;
+  if (pw !== RESET_PASSWORD) { document.getElementById('rules-pw-error').style.display = 'block'; return; }
+  document.getElementById('rules-pw-error').style.display = 'none';
+  document.getElementById('rules-locked').style.display = 'none';
+  document.getElementById('rules-editor-wrap').style.display = 'block';
+  document.getElementById('rules-editor').value = state.rules;
+}
+
+function unlockEmail() {
+  const pw = document.getElementById('email-password').value;
+  if (pw !== RESET_PASSWORD) { document.getElementById('email-pw-error').style.display = 'block'; return; }
+  document.getElementById('email-pw-error').style.display = 'none';
+  document.getElementById('email-locked').style.display = 'none';
+  document.getElementById('email-editor-wrap').style.display = 'block';
+  document.getElementById('email-signoff').value = state.emailSignoff || 'Evan (Student Life Rep)';
+  loadTemplateEditor();
+}
+
+function unlockWeek() {
+  const pw = document.getElementById('week-password').value;
+  if (pw !== RESET_PASSWORD) { document.getElementById('week-pw-error').style.display = 'block'; return; }
+  document.getElementById('week-pw-error').style.display = 'none';
+  document.getElementById('week-locked').style.display = 'none';
+  document.getElementById('week-buttons').style.display = 'flex';
 }
 
 
