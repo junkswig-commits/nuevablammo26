@@ -462,12 +462,7 @@
     <!-- TARGETS VIEW -->
     <div class="admin-section">
       <h3>👁 Current Target Chain</h3>
-      <div id="targets-view-locked" style="display:flex;gap:0.5rem;align-items:center;">
-        <input type="password" id="targets-password" placeholder="Password to reveal..." style="max-width:220px;" onkeydown="if(event.key==='Enter')unlockTargets()">
-        <button class="btn btn-ghost" onclick="unlockTargets()">Reveal</button>
-        <div id="targets-pw-error" class="error" style="display:none;">Incorrect password.</div>
-      </div>
-      <div id="targets-view" style="display:none;"></div>
+      <div id="targets-view"></div>
     </div>
 
     <!-- RULES EDITOR -->
@@ -646,7 +641,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v3.2 — Feb 20 2026';
+const VERSION = 'v3.3 — Feb 20 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
