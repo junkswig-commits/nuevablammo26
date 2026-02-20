@@ -641,7 +641,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-const VERSION = 'v3.3 — Feb 20 2026';
+const VERSION = 'v3.4 — Feb 20 2026';
 const ADMIN_PASSWORD = 'DJChozenWan23';
 const CLEAR_PASSWORD = 'Xq7#mP2$kL9vR4nW';
 const RESET_PASSWORD = 'Xq7#mP2$kL9vR4nW';
@@ -1330,6 +1330,7 @@ function assignInitialTargets() {
     save();
     renderAdmin();
     alert(`Done! All ${alive.length} players have been assigned a target. Game on!`);
+    sendNewWeekEmails();
   });
 }
 
